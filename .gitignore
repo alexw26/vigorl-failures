@@ -22,3 +22,6 @@ slurm/
 # Data and checkpoints
 data/
 checkpoints/
+
+# Slurm output files
+.slurm/
