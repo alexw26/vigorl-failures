@@ -9,6 +9,13 @@ from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
+
+def _vllm_headers(config: "BenchmarkConfig") -> dict[str, str]:
+    if not config.api_key:
+        return {}
+
+    return {"Authorization": f"Bearer {config.api_key}"}
+
 @dataclass
 class BenchmarkConfig:
     # Pretrained model
@@ -48,8 +55,15 @@ def _is_vllm_ready(config: BenchmarkConfig) -> bool:
     try:
         response = requests.get(
             f"http://localhost:{config.port}/v1/models",
+            headers=_vllm_headers(config),
             timeout=config.request_timeout_sec,
         )
+        if response.status_code != 200:
+            logger.info(
+                "vLLM readiness probe returned %s: %s",
+                response.status_code,
+                response.text[:200],
+            )
         return response.status_code == 200
     except requests.RequestException:
         return False
@@ -63,30 +77,33 @@ def start_vllm_server(config: BenchmarkConfig) -> subprocess.Popen | None:
         )
         return None
 
+    command = [
+        "vllm",
+        "serve",
+        config.model_name,
+        "--port",
+        str(config.port),
+        "--served-model-name",
+        config.served_model_name,
+        "--gpu-memory-utilization",
+        str(config.gpu_memory_utilization),
+        "--tensor-parallel-size",
+        str(config.n_gpus),
+        "--uvicorn-log-level",
+        "info",
+        "--limit-mm-per-prompt",
+        config.limit_mm_per_prompt,
+        "--mm-processor-kwargs",
+        config.mm_processor_kwargs,
+        "--api-key",
+        config.api_key,
+    ]
+    logger.info("Launching vLLM command: %s", subprocess.list2cmdline(command))
+
     vllm_process = subprocess.Popen(
-        [
-            "vllm",
-            "serve",
-            config.model_name,
-            "--port",
-            str(config.port),
-            "--served-model-name",
-            config.served_model_name,
-            "--gpu-memory-utilization",
-            str(config.gpu_memory_utilization),
-            "--tensor-parallel-size",
-            str(config.n_gpus),
-            "--uvicorn-log-level",
-            "info",
-            "--limit-mm-per-prompt",
-            config.limit_mm_per_prompt,
-            "--mm-processor-kwargs",
-            config.mm_processor_kwargs,
-            "--api-key",
-            config.api_key,
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
+        command,
+        stdout=None,
+        stderr=None,
         preexec_fn=os.setsid,
         env={**os.environ, "PORT": str(config.port)},
     )

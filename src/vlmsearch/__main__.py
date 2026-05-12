@@ -240,6 +240,7 @@ def main():
     save_tag = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     if args.save_tag:
         save_tag = f"{args.save_tag}_{save_tag}"
+    save_tag = save_tag.replace("/", "_")
 
     out_dir = os.path.join(args.save_rollouts_dir, save_tag)
     # We want each worker to create the directory if not present
@@ -255,12 +256,17 @@ def main():
 
     if args.use_python_mp:
         #--- Multiprocessing path ---
+        # raw_dataset = load_dataset(
+        #     "src/vlmsearch/datasets/data_loader.py",
+        #     data_files={"train": data_files_list},
+        #     image_root=args.image_root,
+        #     split="train",
+        #     trust_remote_code=True
+        # )
         raw_dataset = load_dataset(
-            "src/vlmsearch/datasets/data_loader.py",
-            data_files={"train": data_files_list},
-            image_root=args.image_root,
+            "json",
+            data_files="/projects/bheg/sycui/grounded_rl/docvqa/validation.jsonl",
             split="train",
-            trust_remote_code=True
         )
 
         if args.max_samples:
@@ -316,11 +322,16 @@ def main():
         kwargs_handler = InitProcessGroupKwargs(timeout=datetime.timedelta(seconds=60000))
         accelerator = Accelerator(kwargs_handlers=[kwargs_handler])
 
+        # raw_dataset = load_dataset(
+        #     "src/vlmsearch/datasets/data_loader.py",
+        #     data_files={"train": args.data_files},
+        #     image_root=args.image_root,
+        #     split="train"
+        # )
         raw_dataset = load_dataset(
-            "src/vlmsearch/datasets/data_loader.py",
-            data_files={"train": args.data_files},
-            image_root=args.image_root,
-            split="train"
+            "json",
+            data_files="/projects/bheg/sycui/grounded_rl/docvqa/validation.jsonl",
+            split="train",
         )
 
         if args.max_samples:
@@ -338,14 +349,15 @@ def main():
         checkpoint_interval = getattr(args, "checkpoint_interval", 100)
 
         for idx, sample in enumerate(tqdm(dataset_shard, desc="Processing dataset_shard", disable=not accelerator.is_main_process)):
-            sample["input_query"] = sample["conversations"]["value"][0]
-            sample["true_answer"] = sample["conversations"]["value"][1]
+            sample["input_query"] = sample["conversations"][0]["value"]
+            sample["true_answer"] = sample["conversations"][1]["value"]
 
             try:
                 search_outputs = tree_searcher.search(
                     input_query=sample["input_query"],
                     input_image_path=sample["image"],
                     true_answer=sample["true_answer"],
+                    worker_id=accelerator.process_index,
                 )
             except openai.OpenAIError as e:
                 logging.error(f"OpenAIError: {e}")

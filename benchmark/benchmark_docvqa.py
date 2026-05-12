@@ -58,7 +58,7 @@ def benchmark_docvqa(
         "python",
         "-m", "src.vlmsearch",
         "--seed", str(config.seed),
-        "--model", config.model_name,
+        "--model", config.served_model_name,
         "--judge", config.judge,
         "--search_method", config.search_method,
         "--max_depth", str(config.max_depth),
@@ -73,9 +73,9 @@ def benchmark_docvqa(
         "--do_data_checkpoint",
         "--checkpoint_interval", str(config.checkpoint_interval),
         "--pretrained", config.model_name,
-        "--max_samples", "10",
+        "--max_samples", "5349",
         "--system_prompt", system_prompt,
-        # "--generate_upfront",
+        "--generate_upfront",
         # "--first_rollout_no_sample",
         "--save_tag", f"{config.model_name}_docvqa",
         "--repetition_penalty", str(config.repetition_penalty),
@@ -85,8 +85,11 @@ def benchmark_docvqa(
     
 if __name__ == "__main__":
     config = helpers.BenchmarkConfig(
+        n_gpus=4,
         model_name="gsarch/ViGoRL-7b-Visual-Search",
-        startup_timeout_sec=1200
+        startup_timeout_sec=1200,
+        search_method="single_path_rollouts",
+        checkpoint_interval=200
     )
     
     # convert_to_vlmsearch_jsonl(
@@ -97,7 +100,11 @@ if __name__ == "__main__":
     vllm_process = helpers.start_vllm_server(config)
 
     try:
-        benchmark_docvqa(config)
+        benchmark_docvqa(
+            config,
+            data_files=helpers.data_dir() / "docvqa/validation.jsonl",
+            image_root=helpers.data_dir() / "docvqa/images",
+        )
     finally:
         helpers.stop_vllm_server(vllm_process)
     

@@ -494,7 +494,23 @@ class Judge:
 
     
 
-    def _string_matching(self, gt_ans: str, pred_ans: str) -> float:
+    def _normalize_gt_answers(self, gt_ans: str | list[str]) -> list[str]:
+        if isinstance(gt_ans, list):
+            candidates = gt_ans
+        else:
+            candidates = [gt_ans]
+
+        normalized_answers = []
+        for candidate in candidates:
+            if not isinstance(candidate, str):
+                continue
+            normalized = self._remove_punctuation_spaces(candidate)
+            if normalized:
+                normalized_answers.append(normalized)
+
+        return normalized_answers
+
+    def _string_matching(self, gt_ans: str | list[str], pred_ans: str) -> float:
 
         """
         Judges the predicted answer and returns a float score. 1.0 for the correct answer, 0.0 for the wrong answer.
@@ -507,21 +523,18 @@ class Judge:
         - score: The score of the predicted answer.
         
         """
-
-        #Accounitng for the fact that the answers may be in different cases
-        gt_ans = gt_ans.lower()
-
         pred_ans = self._remove_punctuation_spaces(pred_ans)
-        gt_ans = self._remove_punctuation_spaces(gt_ans)
+        gt_answers = self._normalize_gt_answers(gt_ans)
 
-        if gt_ans == pred_ans or gt_ans in pred_ans:
-            logger.debug(f"Judge response : 1.0")
-            return 1.0
-        else:
-            logger.debug(f"Judge response : 0.0")
-            return 0.0
+        for candidate in gt_answers:
+            if candidate == pred_ans or candidate in pred_ans:
+                logger.debug(f"Judge response : 1.0")
+                return 1.0
+
+        logger.debug(f"Judge response : 0.0")
+        return 0.0
     
-    def _check_gt_ans_yes_no(self, gt_ans: str) -> bool:
+    def _check_gt_ans_yes_no(self, gt_ans: str | list[str]) -> bool:
 
         """
         Checks if the ground truth answer is a yes or no answer.
@@ -533,16 +546,9 @@ class Judge:
         - is_yes_no: Whether the ground truth answer is a yes or no answer.
         
         """
+        gt_answers = self._normalize_gt_answers(gt_ans)
 
-        #Accounitng for the fact that the answers may be in different cases
-        gt_ans = gt_ans.lower()
-
-        gt_ans = self._remove_punctuation_spaces(gt_ans)
-        
-        if gt_ans == "yes" or gt_ans == "no":
-            return True
-        else:
-            return False
+        return any(answer == "yes" or answer == "no" for answer in gt_answers)
     
     def _remove_punctuation_spaces(self, ans: str) -> str:
 
