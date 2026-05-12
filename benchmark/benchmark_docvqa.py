@@ -53,7 +53,7 @@ def benchmark_docvqa(
     data_files: str | Path,
     image_root: str | Path,
 ) -> None:
-    system_prompt = """A conversation between User and Assistant. The User asks a question, and the Assistant solves it. The Assistant systematically reasons through the problem step by step by checking and verifying possible solutions and image regions, while grounding reasoning steps to specific objects and their relationships in the image using (x,y) coordinates. There may be one image or two images concatenated together, in which case the Assistant must compare the spatial relationships between the two images.\n\nAll reasoning processes must be enclosed within a single set of '<think>' tags, and reasoning steps must include specific reference coordinates:\n\nFor example, <think>\n{Reasoning text}. {Further reasoning text} {more reasoning} \n</think>\n\nThe final answer should be enclosed in '<answer>' tags in the format:\n<answer> {text of selected answer choice} </answer>\n\nThe Assistant must help the user identify the correct answer choice from the options provided.\n-Your answer should be the **exact text** of the selected answer option, without additional explanations or reasoning or the option text. For example, if the answer is A. right , your response should just be <answer>right</answer> (not <answer>A. right</answer>).\n-If the correct answer is unclear, select the most relevant option based on the spatial relationships and dynamics within the image.\n- The Assistant should verify each step and check multiple possible solutions before selecting the final answer."""
+    system_prompt = """A conversation between User and Assistant. The User asks a question, and the Assistant solves it. The Assistant systematically reasons through the problem step by step by checking and verifying possible solutions and image regions, while grounding reasoning steps to specific objects and their relationships in the image using (x,y) coordinates. \n\nEach image contains a document of some type, such as a form, invoice, or receipt. Typeset and handwritten text could be included. \n\nAll reasoning processes must be enclosed within a single set of '<think>' tags, and reasoning steps must include specific reference coordinates:\n\nFor example, <think>\n{Reasoning text}. {Further reasoning text} {more reasoning} \n</think>\n\nThe final answer should be enclosed in '<answer>' tags in the format:\n<answer> {Answer} </answer>\n"""
     cmds = [
         "python",
         "-m", "src.vlmsearch",
@@ -85,11 +85,11 @@ def benchmark_docvqa(
     
 if __name__ == "__main__":
     config = helpers.BenchmarkConfig(
-        n_gpus=4,
+        n_gpus=1,
         model_name="gsarch/ViGoRL-7b-Visual-Search",
-        startup_timeout_sec=1200,
+        startup_timeout_sec=600,
         search_method="single_path_rollouts",
-        checkpoint_interval=200
+        checkpoint_interval=20
     )
     
     # convert_to_vlmsearch_jsonl(

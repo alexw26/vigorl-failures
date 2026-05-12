@@ -263,9 +263,14 @@ def main():
         #     split="train",
         #     trust_remote_code=True
         # )
+        # raw_dataset = load_dataset(
+        #     "json",
+        #     data_files="/projects/bheg/sycui/grounded_rl/docvqa/validation.jsonl",
+        #     split="train",
+        # )
         raw_dataset = load_dataset(
             "json",
-            data_files="/projects/bheg/sycui/grounded_rl/docvqa/validation.jsonl",
+            data_files="/projects/bheg/sycui/grounded_rl/haloquest/validation.jsonl",
             split="train",
         )
 
@@ -328,9 +333,14 @@ def main():
         #     image_root=args.image_root,
         #     split="train"
         # )
+        # raw_dataset = load_dataset(
+        #     "json",
+        #     data_files="/projects/bheg/sycui/grounded_rl/docvqa/validation.jsonl",
+        #     split="train",
+        # )
         raw_dataset = load_dataset(
             "json",
-            data_files="/projects/bheg/sycui/grounded_rl/docvqa/validation.jsonl",
+            data_files="/projects/bheg/sycui/grounded_rl/haloquest/validation.jsonl",
             split="train",
         )
 

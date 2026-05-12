@@ -9,7 +9,7 @@
 #SBATCH --gpus-per-node=4
 #SBATCH --gpu-bind=closest
 #SBATCH --account=bheg-delta-gpu
-#SBATCH -t 32:00:00
+#SBATCH -t 12:00:00
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=cui20@illinois.edu
 
@@ -19,4 +19,5 @@ source "${PRJ_DIR}/.venv/bin/activate"
 echo "$(type python)"
 echo "" > "${OUTPUT_FILE}"
 
-python "${PRJ_DIR}/benchmark/benchmark_docvqa.py"
+# python "${PRJ_DIR}/benchmark/benchmark_docvqa.py"
+python "${PRJ_DIR}/benchmark/benchmark_haloquest.py"
