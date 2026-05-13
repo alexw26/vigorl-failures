@@ -11,7 +11,7 @@ def parse_jsonl(file: str | Path) -> list[dict]:
     
 def docvqa_analyze():
     project_dir = Path(__file__).parent.parent
-    data_dir = project_dir / "data/rollouts/gsarch_ViGoRL-7b-Visual-Search_docvqa_20260508_120516"
+    data_dir = project_dir / "data/rollouts/gsarch_ViGoRL-7b-Visual-Search_docvqa_20260512_064731"
     data = list(data_dir.glob("rollouts*.jsonl")) 
     dicts = []
     for file in data:

@@ -105,38 +105,38 @@ def benchmark_haloquest(
         "--do_data_checkpoint",
         "--checkpoint_interval", str(config.checkpoint_interval),
         "--pretrained", config.model_name,
-        "--max_samples", "5349",
+        "--max_samples", "600",
         "--system_prompt", system_prompt,
         "--generate_upfront",
         # "--first_rollout_no_sample",
-        "--save_tag", f"{config.model_name}_docvqa",
+        "--save_tag", f"{config.model_name}_haloquest",
         "--repetition_penalty", str(config.repetition_penalty),
     ]
     subprocess.run(cmds, check=True)
     
     
 if __name__ == "__main__":
-    # config = helpers.BenchmarkConfig(
-    #     n_gpus=1,
-    #     model_name="gsarch/ViGoRL-7b-Visual-Search",
-    #     startup_timeout_sec=600,
-    #     search_method="single_path_rollouts",
-    #     checkpoint_interval=20
-    # )
-    
-    convert_to_vlmsearch_jsonl(
-        image_path=helpers.data_dir() / "haloquest/images",
-        jsonl_path=helpers.data_dir() / "haloquest/validation.jsonl",
+    config = helpers.BenchmarkConfig(
+        n_gpus=1,
+        model_name="gsarch/ViGoRL-7b-Visual-Search",
+        startup_timeout_sec=600,
+        search_method="single_path_rollouts",
+        checkpoint_interval=20
     )
     
-    # vllm_process = helpers.start_vllm_server(config)
+    # convert_to_vlmsearch_jsonl(
+    #     image_path=helpers.data_dir() / "haloquest/images",
+    #     jsonl_path=helpers.data_dir() / "haloquest/validation.jsonl",
+    # )
+    
+    vllm_process = helpers.start_vllm_server(config)
 
-    # try:
-    #     benchmark_haloquest(
-    #         config,
-    #         data_files=helpers.data_dir() / "haloquest/validation.jsonl",
-    #         image_root=helpers.data_dir() / "haloquest/images",
-    #     )
-    # finally:
-    #     helpers.stop_vllm_server(vllm_process)
+    try:
+        benchmark_haloquest(
+            config,
+            data_files=helpers.data_dir() / "haloquest/validation.jsonl",
+            image_root=helpers.data_dir() / "haloquest/images",
+        )
+    finally:
+        helpers.stop_vllm_server(vllm_process)
     
