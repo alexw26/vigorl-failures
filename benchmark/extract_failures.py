@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+import click
 import pandas as pd
 
 
@@ -8,11 +9,16 @@ def parse_jsonl(file: str | Path) -> list[dict]:
     with open(file, "r") as f:
         return [json.loads(line) for line in f]
     
-    
-def docvqa_analyze():
-    project_dir = Path(__file__).parent.parent
-    data_dir = project_dir / "data/rollouts/gsarch_ViGoRL-7b-Visual-Search_docvqa_20260512_064731"
-    data = list(data_dir.glob("rollouts*.jsonl")) 
+
+@click.command()
+@click.option("--input_dir", type=click.Path(exists=True))
+@click.option("--output_file", type=click.Path())
+def extract_failures(
+    input_dir: str | Path, output_file: str | Path
+) -> None:
+    input_dir = Path(input_dir)
+    output_file = Path(output_file)
+    data = list(input_dir.glob("rollouts*.jsonl")) 
     dicts = []
     for file in data:
         dicts.extend(parse_jsonl(file))
@@ -33,13 +39,9 @@ def docvqa_analyze():
     
     # Save failures to file
     failures_df = pd.DataFrame(failures)
-    failures_df.to_csv(project_dir / "docvqa_failures.csv", index=False)
+    failures_df.to_csv(output_file, index=False)
         
 
 if __name__ == "__main__":
-    docvqa_analyze()
-    # import helpers
-    # data = helpers.data_dir() / "docvqa/validation.jsonl"
-    # count_lines = sum(1 for _ in open(data, "r"))
-    # print(count_lines)
+    extract_failures()
     
